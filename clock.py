@@ -32,7 +32,7 @@ pygame.mixer.init()
 pygame.mixer.music.load("clock.wav")
 pygame.mixer.music.set_volume(1.0)     
 
-screen = pygame.display.set_mode((640, 480))  # windowed for Mac preview
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("B/W Analog Clock")
 
 w, h = screen.get_size()
