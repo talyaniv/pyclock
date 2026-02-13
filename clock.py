@@ -27,7 +27,12 @@ def get_cached_temp():
     return cached_temp
 
 pygame.init()
-pygame.mixer.init()
+pygame.mixer.init(
+    frequency=44100,   # HDMI-friendly sample rate
+    size=-16,          # signed 16-bit audio
+    channels=2,        # stereo
+    buffer=1024        # safe buffer for Pi Zero
+)
 
 pygame.mixer.music.load("clock.wav")
 pygame.mixer.music.set_volume(1.0)     
