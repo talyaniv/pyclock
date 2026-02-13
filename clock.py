@@ -28,7 +28,7 @@ def get_cached_temp():
 
 pygame.init()
 pygame.mixer.init(
-    frequency=44100,   # HDMI-friendly sample rate
+    frequency=48000,   # HDMI-friendly sample rate
     size=-16,          # signed 16-bit audio
     channels=2,        # stereo
     buffer=1024        # safe buffer for Pi Zero
