@@ -1,9 +1,12 @@
+import os
+os.environ["SDL_AUDIODRIVER"] = "dummy"
 import pygame
 import math
 import time
 import sys
 import urllib.request
 import json
+import subprocess
 
 def get_temperature_celsius(lat, lon):
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
@@ -27,16 +30,6 @@ def get_cached_temp():
     return cached_temp
 
 pygame.init()
-pygame.mixer.init(
-    frequency=48000,   # HDMI-friendly sample rate
-    size=-16,          # signed 16-bit audio
-    channels=2,        # stereo
-    buffer=1024        # safe buffer for Pi Zero
-)
-
-pygame.mixer.music.load("clock.wav")
-pygame.mixer.music.set_volume(1.0)     
-
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("B/W Analog Clock")
 
@@ -83,6 +76,9 @@ def draw_hour_ticks(surface):
         )
 
         pygame.draw.line(surface, (255, 255, 255), inner, outer, 4)
+
+music_process = None
+music_started_this_minute = False
 
 while True:
     for event in pygame.event.get():
@@ -193,9 +189,22 @@ while True:
 
     # Start music exactly on first second tick
 
-    if current_sec == 2:
-        if not pygame.mixer.music.get_busy():
-            pygame.mixer.music.play(loops=0)
+    if current_sec == 2 and not music_started_this_minute:
+        if music_process and music_process.poll() is None:
+            music_process.terminate()  # politely terminate
+            music_process.wait()       # wait until fully stopped
+        subprocess.Popen([
+            "aplay",
+            "-D", "default",
+            "--buffer-size=96000",
+            "--period-size=24000",
+            "clock.wav"
+        ])
+        music_started_this_minute = True
+
+    # # Reset flag at the start of a new minute
+    if current_sec == 0:
+        music_started_this_minute = False
 
     pygame.display.flip()
     clock.tick(1)
