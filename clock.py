@@ -32,6 +32,7 @@ def get_cached_temp():
 pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("B/W Analog Clock")
+pygame.mouse.set_visible(False)
 
 w, h = screen.get_size()
 center = (w // 2, h // 2)
