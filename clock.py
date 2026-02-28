@@ -1,9 +1,5 @@
 import os
-os.environ["SDL_VIDEO_FULLSCREEN_DISPLAY"] = "0"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
-os.environ["SDL_VIDEO_CENTERED"] = "1"
-os.environ["SDL_RENDER_SCALE_QUALITY"] = "0"
-
 import pygame
 import math
 import time
@@ -34,21 +30,15 @@ def get_cached_temp():
     return cached_temp
 
 pygame.init()
-info = pygame.display.Info()
-screen_width = info.current_w
-screen_height = info.current_h
-
-screen = pygame.display.set_mode(
-    (screen_width, screen_height),
-    pygame.FULLSCREEN
-)
-
+V_W, V_H = 800, 600  # 4:3 resolution
+virtual_surface = pygame.Surface((V_W, V_H))
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("B/W Analog Clock")
 pygame.mouse.set_visible(False)
 
 w, h = screen.get_size()
-center = (w // 2, h // 2)
-radius = int(min(w, h) * 0.4)
+center = (V_W // 2, V_H // 2)
+radius = int(min(V_W, V_H) * 0.4)
 
 clock = pygame.time.Clock()
 
@@ -99,14 +89,14 @@ while True:
             pygame.quit()
             sys.exit()
 
-    screen.fill((0, 0, 0))
+    virtual_surface.fill((0, 0, 0))
     t = time.localtime()
 
     # Clock face
-    draw_glow_circle(screen, center, radius, 4)
+    draw_glow_circle(virtual_surface, center, radius, 4)
 
     # Hour ticks
-    draw_hour_ticks(screen)
+    draw_hour_ticks(virtual_surface)
 
 
 
@@ -122,7 +112,7 @@ while True:
     brand_y = center[1] - int(radius * 0.45) - brand_height // 2  # slightly above center
     brand_image_scaled.set_alpha(204)
 
-    screen.blit(brand_image_scaled, (brand_x, brand_y))
+    virtual_surface.blit(brand_image_scaled, (brand_x, brand_y))
 
     # Temperature display
     temp = get_cached_temp()
@@ -139,7 +129,7 @@ while True:
         temp_y = center[1]
         temp_rect.center = (temp_x, temp_y)
 
-        screen.blit(temp_surf, temp_rect)
+        virtual_surface.blit(temp_surf, temp_rect)
 
 
     # Day of month (between center and 3 o'clock)
@@ -159,14 +149,14 @@ while True:
     bg_rect = text_rect.inflate(padding_x * 2, padding_y * 2)
 
     pygame.draw.rect(
-        screen,
+        virtual_surface,
         (100, 100, 100),   # white outline
         bg_rect,
         width=2,           # outline thickness
         border_radius=6
     )
 
-    screen.blit(text_surf, text_rect)
+    virtual_surface.blit(text_surf, text_rect)
 
     # Hour hand
     hour_angle = -math.pi / 2 + (t.tm_hour % 12 + t.tm_min / 60) * math.pi / 6
@@ -174,7 +164,7 @@ while True:
         center[0] + int(radius * 0.5 * math.cos(hour_angle)),
         center[1] + int(radius * 0.5 * math.sin(hour_angle))
     )
-    draw_glow_line(screen, center, hour_end, 6)
+    draw_glow_line(virtual_surface, center, hour_end, 6)
 
     # Minute hand
     min_angle = -math.pi / 2 + t.tm_min * math.pi / 30
@@ -182,7 +172,7 @@ while True:
         center[0] + int(radius * 0.75 * math.cos(min_angle)),
         center[1] + int(radius * 0.75 * math.sin(min_angle))
     )
-    draw_glow_line(screen, center, min_end, 4)
+    draw_glow_line(virtual_surface, center, min_end, 4)
 
     # Seconds hand (long, thin, precise)
     sec_angle = -math.pi / 2 + t.tm_sec * math.pi / 30
@@ -190,7 +180,7 @@ while True:
         center[0] + int(radius * 0.95 * math.cos(sec_angle)),
         center[1] + int(radius * 0.95 * math.sin(sec_angle))
     )
-    pygame.draw.line(screen, (255, 255, 255), center, sec_end, 1)
+    pygame.draw.line(virtual_surface, (255, 255, 255), center, sec_end, 1)
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -218,6 +208,8 @@ while True:
     # # Reset flag at the start of a new minute
     if current_sec == 0:
         music_started_this_minute = False
-
+    screen_w, screen_h = screen.get_size()
+    scaled_surface = pygame.transform.smoothscale(virtual_surface, (screen_w, screen_h))
+    screen.blit(scaled_surface, (0, 0))
     pygame.display.flip()
     clock.tick(1)
