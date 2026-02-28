@@ -1,4 +1,5 @@
 import os
+os.environ["SDL_VIDEO_FULLSCREEN_DISPLAY"] = "0"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 os.environ["SDL_RENDER_SCALE_QUALITY"] = "0"
@@ -33,7 +34,15 @@ def get_cached_temp():
     return cached_temp
 
 pygame.init()
-screen = pygame.display.set_mode((1024, 768), pygame.FULLSCREEN)
+info = pygame.display.Info()
+screen_width = info.current_w
+screen_height = info.current_h
+
+screen = pygame.display.set_mode(
+    (screen_width, screen_height),
+    pygame.FULLSCREEN
+)
+
 pygame.display.set_caption("B/W Analog Clock")
 pygame.mouse.set_visible(False)
 
